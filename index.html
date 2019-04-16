@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Outward Interactive Map</title>
+
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	
+	<link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+    <link rel="stylesheet" href="leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/>
+    <script src="leaflet.js" integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg==" crossorigin=""></script>
+
+	<style>
+		html, body {
+			height: 100%;
+			margin: 0;
+		}
+		#map {
+			width: 100%;
+			height: 100%;
+		}
+	</style>
+</head>
+
+<body>
+<div id='map'></div>
+
+<script>
+
+	var yx = L.latLng;
+
+	var xy = function(x, y) {
+		if (L.Util.isArray(x)) {    // When doing xy([x, y]);
+			return yx(x[1], x[0]);
+		}
+		return yx(y, x);  // When doing xy(x, y);
+	};
+
+	//--Marker layers--
+	
+	//Defaults
+	var CitiesLayer = L.layerGroup();
+	var BanditsLayer = L.layerGroup();
+	var FortsLayer = L.layerGroup();
+	var RuinsLayer = L.layerGroup();
+	var CabalTowersLayer = L.layerGroup();
+	var PylonsLayer = L.layerGroup();
+	var MountainLayer = L.layerGroup();
+	
+	//Spoilers
+	var DungeonsLayer = L.layerGroup();
+	var SafezonesLayer = L.layerGroup();
+	var ChestsLayer = L.layerGroup();
+	var LegacyChestsLayer = L.layerGroup();
+	var RoomsLayer = L.layerGroup();
+	var TradersLayer = L.layerGroup();
+	
+	//Base maps
+	var bounds = [xy(0, 0), xy(2048, 2048)];
+	var chersonese	= L.imageOverlay('OWMaps/tex_men_mapChersonese-resources.assets-597.png', bounds),
+		enmerkar  	= L.imageOverlay('OWMaps/tex_men_mapEmerkar-sharedassets0.assets-133.png', bounds),
+		hallowedMarsh  	= L.imageOverlay('OWMaps/tex_men_mapHallowedMarsh-resources.assets-828.png', bounds),
+		abrassar  	= L.imageOverlay('OWMaps/tex_men_mapAbrassar-resources.assets-1735.png', bounds);
+
+	var baseMaps = {
+		"Chersonese": chersonese,
+		"Enmerkar Forest": enmerkar,
+		"Hallowed Marsh": hallowedMarsh,
+		"Abrassar Desert": abrassar,
+	};
+
+	var overlays = {
+		"Cities": CitiesLayer,
+		"Bandit Camps": BanditsLayer,
+		"Fortresses": FortsLayer,
+		"Ancient Ruins": RuinsLayer,
+		"Cabal of Wind Tower": CabalTowersLayer,
+		"Vigil Pylon": PylonsLayer,
+		"Mountain": MountainLayer,
+		//Spoilers
+		"Dungeons": DungeonsLayer,
+		"Safezones": SafezonesLayer,
+		"Chests": ChestsLayer,
+		"Legacy Chests": LegacyChestsLayer,
+		"Misc. Rooms": RoomsLayer,
+		"Potential Trader Spots": TradersLayer,
+		
+	};
+	
+	var customIcon = L.Icon.extend({
+		options: {
+			iconSize:     [80, 80], // size of the icon
+			iconAnchor:   [40, 40], // point of the icon which will correspond to marker's location
+			popupAnchor:  [0, -25] // point from which the popup should open relative to the iconAnchor
+		}
+	});
+	var townIcon = new customIcon({iconUrl: 'Icons/tex_men_mapCursorPositiveBlue-sharedassets4.assets-303.png'}),
+	campIcon = new customIcon({iconUrl: 'Icons/tex_men_mapCursorSilverTent-sharedassets4.assets-178.png'}),
+    fortIcon = new customIcon({iconUrl: 'Icons/tex_men_mapCursorSilverTower-sharedassets4.assets-326.png'}),
+	cabalIcon = new customIcon({iconUrl: 'Icons/tex_men_mapCursorSilverCow-sharedassets4.assets-288.png'}),
+	pylonIcon = new customIcon({iconUrl: 'Icons/tex_men_mapCursorSilverVigil-sharedassets4.assets-248.png'}),
+	mountIcon = new customIcon({iconUrl: 'Icons/tex_men_mapCursorSilverRock-sharedassets4.assets-233.png'}),
+    ruinsIcon = new customIcon({iconUrl: 'Icons/tex_men_mapCursorSilverRuins-sharedassets4.assets-250.png'});
+	
+	//--- DATA  BEGIN ---
+	
+	//Chersonese markers
+	var city1Markers = L.layerGroup();
+	CitiesLayer.addLayer(city1Markers);
+	L.marker(xy(143.71, 1471.84), {icon: townIcon}).bindPopup('Cierzo').addTo(city1Markers);
+	
+	var fort1Markers = L.layerGroup();
+	FortsLayer.addLayer(fort1Markers);
+	L.marker(xy(551.18, 335.34), {icon: fortIcon}).bindPopup('Vendavel Fortress').addTo(fort1Markers);
+	L.marker(xy(1351, 1330), {icon: fortIcon}).bindPopup('Ghost Pass').addTo(fort1Markers);
+	
+	var camps1Markers = L.layerGroup();
+	BanditsLayer.addLayer(camps1Markers);
+	L.marker(xy(818.82, 1890.80), {icon: campIcon}).bindPopup('Bandit Camp').addTo(camps1Markers);
+	L.marker(xy(1282.75, 618.50), {icon: campIcon}).bindPopup('Bandit Camp').addTo(camps1Markers);
+	
+	var ruins1Markers = L.layerGroup();
+	RuinsLayer.addLayer(ruins1Markers);
+	L.marker(xy(1166.0190821766168, 1895.0461735799472), {icon: ruinsIcon}).bindPopup('Ancient Ruins').addTo(ruins1Markers);
+	L.marker(xy(992.5, 162.5), {icon: ruinsIcon}).bindPopup('Ancient Ruins').addTo(ruins1Markers);
+	
+	var cabals1Markers = L.layerGroup();
+	CabalTowersLayer.addLayer(cabals1Markers);
+	L.marker(xy(1808.072039494002, 1691.3994205982215), {icon: cabalIcon}).bindPopup('Cabal of Wind Tower').addTo(cabals1Markers);
+	
+	var pylons1Markers = L.layerGroup();
+	PylonsLayer.addLayer(pylons1Markers);
+	L.marker(xy(1778, 755), {icon: pylonIcon}).bindPopup('Vigil Pylon').addTo(pylons1Markers);
+	
+	var mountain1Markers = L.layerGroup();
+	MountainLayer.addLayer(mountain1Markers);
+	L.marker(xy(926, 880), {icon: mountIcon}).bindPopup('Conflux Mountain').addTo(mountain1Markers);
+	
+	
+	var safezones1 = L.layerGroup();
+	SafezonesLayer.addLayer(safezones1);
+	var circle = L.circle(xy(175.2, 145.0), {color: '#1a1aff', fillColor: '#1a75ff', fillOpacity: 0.35, radius: 30}).addTo(safezones1);
+	
+	
+	//Enmerkar markers
+	var city2Markers = L.layerGroup();
+	L.marker(xy(1265.72, 1436.84), {icon: townIcon}).bindPopup('Berg').addTo(city2Markers);
+	
+	
+	//--- DATA END ---
+	
+	//Map object
+	var map = L.map('map', {
+		crs: L.CRS.Simple,
+		minZoom: -2,
+		maxZoom: 2,
+		zoomDelta: 0.5, //1
+        zoomSnap: 0.5, //1
+		wheelDebounceTime: 10, //40
+		wheelPxPerZoomLevel: 128, //60
+		layers: [chersonese, CitiesLayer, FortsLayer, BanditsLayer, RuinsLayer, CabalTowersLayer, PylonsLayer, MountainLayer], //default display layers
+	});
+	//map.fitBounds(bounds);
+	
+	//Add scale display
+	L.control.scale().addTo(map);
+
+	//Center
+	map.setView(xy(1024, 1024), -1); //center, zoomLvl
+
+	//Control panel
+	L.control.layers(baseMaps, overlays,{collapsed:false}).addTo(map);
+	
+		/*"Cities": CitiesLayer,
+		"Bandit Camps": BanditsLayer,
+		"Fortresses": FortsLayer,
+		"Ancient Ruins": RuinsLayer,
+		"Cabal of Wind Tower": CabalTowersLayer,
+		"Vigil Pylon": PylonsLayer,
+		"Mountain": MountainLayer,
+		//Spoilers
+		"Dungeons": DungeonsLayer,
+		"Safezones": SafezonesLayer,
+		"Chests": ChestsLayer,
+		"Legacy Chests": LegacyChestsLayer,
+		"Misc. Rooms": RoomsLayer,
+		"Potential Trader Spots": TradersLayer,*/
+	
+	
+	//Switch markers based on baseMap
+	chersonese.on("add",function()
+	{
+		CitiesLayer.clearLayers();
+		BanditsLayer.clearLayers();
+		FortsLayer.clearLayers();
+		RuinsLayer.clearLayers();
+		CabalTowersLayer.clearLayers();
+		PylonsLayer.clearLayers();
+		MountainLayer.clearLayers();
+		
+		SafezonesLayer.clearLayers();
+		
+		CitiesLayer.addLayer(city1Markers);
+		BanditsLayer.addLayer(camps1Markers);
+		FortsLayer.addLayer(fort1Markers);
+		RuinsLayer.addLayer(ruins1Markers);
+		CabalTowersLayer.addLayer(cabals1Markers);
+		PylonsLayer.addLayer(pylons1Markers);
+		MountainLayer.addLayer(mountain1Markers);
+		
+		SafezonesLayer.addLayer(safezones1);
+	});
+
+	enmerkar.on("add",function()
+	{
+		CitiesLayer.clearLayers();
+		BanditsLayer.clearLayers();
+		FortsLayer.clearLayers();
+		RuinsLayer.clearLayers();
+		CabalTowersLayer.clearLayers();
+		PylonsLayer.clearLayers();
+		MountainLayer.clearLayers();
+		
+		CitiesLayer.addLayer(city2Markers);
+		SafezonesLayer.clearLayers();
+	});
+	
+	hallowedMarsh.on("add",function()
+	{
+		CitiesLayer.clearLayers();
+		BanditsLayer.clearLayers();
+		FortsLayer.clearLayers();
+		RuinsLayer.clearLayers();
+		CabalTowersLayer.clearLayers();
+		PylonsLayer.clearLayers();
+		MountainLayer.clearLayers();
+		
+		CitiesLayer.addLayer(city3Markers);
+		SafezonesLayer.clearLayers();
+	});
+	
+	abrassar.on("add",function()
+	{
+		CitiesLayer.clearLayers();
+		BanditsLayer.clearLayers();
+		FortsLayer.clearLayers();
+		RuinsLayer.clearLayers();
+		CabalTowersLayer.clearLayers();
+		PylonsLayer.clearLayers();
+		MountainLayer.clearLayers();
+		
+		CitiesLayer.addLayer(city4Markers);
+		SafezonesLayer.clearLayers();
+	});
+
+	
+	
+	//var bounds = [xy(0, 0), xy(1190, 1195)];
+	//var image = L.imageOverlay('map_full.jpg', bounds).addTo(map);
+	//map.fitBounds(bounds);
+
+
+
+	var popup = L.popup();
+	function onMapClick(e)
+	{
+		popup
+			.setLatLng(e.latlng)
+			.setContent("X,Y Coords: " + e.latlng.lng.toString() +", "+ e.latlng.lat.toString())
+			.openOn(map);
+	}
+	map.on('click', onMapClick);
+
+
+</script>
+
+</body>
+</html>
