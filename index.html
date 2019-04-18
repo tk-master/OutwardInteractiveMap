@@ -7,8 +7,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	
 	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
-    <link rel="stylesheet" href="leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/>
-    <script src="leaflet.js" integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg==" crossorigin=""></script>
+    <link rel="stylesheet" href="leaflet.css"/>
+    <script src="leaflet.js"></script>
 
 	<style>
 		html, body {
@@ -45,12 +45,15 @@
 	var RuinsLayer = L.layerGroup();
 	var CabalTowersLayer = L.layerGroup();
 	var PylonsLayer = L.layerGroup();
-	var MountainLayer = L.layerGroup();
+	var OtherLayer = L.layerGroup();
+	var ZoneArrowsLayer = L.layerGroup();
 	
 	//Spoilers
 	var DungeonsLayer = L.layerGroup();
 	var SafezonesLayer = L.layerGroup();
+	var CachesLayer = L.layerGroup();
 	var ChestsLayer = L.layerGroup();
+	var OrnateChestsLayer = L.layerGroup();
 	var LegacyChestsLayer = L.layerGroup();
 	var RoomsLayer = L.layerGroup();
 	var TradersLayer = L.layerGroup();
@@ -61,12 +64,21 @@
 		enmerkar  	= L.imageOverlay('Maps/mapEmerkar.jpg', bounds),
 		hallowedMarsh  	= L.imageOverlay('Maps/mapHallowedMarsh.jpg', bounds),
 		abrassar  	= L.imageOverlay('Maps/mapAbrassar.jpg', bounds);
-
+		
+	var cierzo = L.imageOverlay('OWMaps/tex_men_mapCierzo-sharedassets0.assets-317.png', bounds),
+	berg = L.imageOverlay('OWMaps/tex_men_mapBerg-resources.assets-1404.png', bounds),
+	monsoon = L.imageOverlay('OWMaps/tex_men_mapMonsoon-resources.assets-338.png', bounds),
+	levant = L.imageOverlay('OWMaps/tex_men_mapLevant-resources.assets-1154.png', bounds);
+	
 	var baseMaps = {
-		"Chersonese": chersonese,
-		"Enmerkar Forest": enmerkar,
-		"Hallowed Marsh": hallowedMarsh,
-		"Abrassar Desert": abrassar,
+		"Chersonese":		chersonese,
+		"Enmerkar Forest":	enmerkar,
+		"Hallowed Marsh":	hallowedMarsh,
+		"Abrassar Desert":	abrassar,
+		"<img src='favicon.ico', height=11, width=11> Cierzo":		cierzo,
+		"<img src='favicon.ico', height=11, width=11> Berg":		berg,
+		"<img src='favicon.ico', height=11, width=11> Monsoon":		monsoon,
+		"<img src='favicon.ico', height=11, width=11> Levant":		levant,
 	};
 
 	var overlays = {
@@ -74,14 +86,18 @@
 		"Bandit Camps": BanditsLayer,
 		"Fortresses": FortsLayer,
 		"Ancient Ruins": RuinsLayer,
-		"Cabal of Wind Tower": CabalTowersLayer,
 		"Vigil Pylon": PylonsLayer,
-		"Mountain": MountainLayer,
-		//Spoilers
-		"Dungeons": DungeonsLayer,
+		"Cabal of Wind Tower": CabalTowersLayer,
+		"Zone Exits": ZoneArrowsLayer,
+		"Other Point of Interest": OtherLayer,
+		
+		//--
+		"Hostile Area Entries": DungeonsLayer,
 		"Safezones": SafezonesLayer,
+		"Supplies": CachesLayer,
 		"Chests": ChestsLayer,
-		"Legacy Chests": LegacyChestsLayer,
+		"Ornate Chests": OrnateChestsLayer,
+		"Legacy Chest": LegacyChestsLayer,
 		"Misc. Rooms": RoomsLayer,
 		"Potential Trader Spots": TradersLayer,
 		
@@ -102,22 +118,51 @@
 	mountIcon = new customIcon({iconUrl: 'Icons/tex_men_mapCursorSilverRock-sharedassets4.assets-233.png'}),
     ruinsIcon = new customIcon({iconUrl: 'Icons/tex_men_mapCursorSilverRuins-sharedassets4.assets-250.png'});
 	
+	var greenIcon = new customIcon({iconUrl: 'Icons/tex_men_mapCursorGreenSquare.png', iconSize: [64, 64], iconAnchor: [32, 32], popupAnchor: [0, -15]});
+	var redIcon = new customIcon({iconUrl: 'Icons/tex_men_mapCursorRedTri-sharedassets0.assets-507.png', iconSize: [64, 64], iconAnchor: [32, 32], popupAnchor: [0, -15]});
+	var blueIcon = new customIcon({iconUrl: 'Icons/tex_men_mapCursorBlueCircle-sharedassets0.assets-516.png', iconSize: [64, 64], iconAnchor: [32, 32], popupAnchor: [0, -15]});
+	var purpleIcon = new customIcon({iconUrl: 'Icons/tex_men_mapCursorPurplePenta-sharedassets0.assets-532.png', iconSize: [64, 64], iconAnchor: [32, 32], popupAnchor: [0, -15]});
+	var yellowIcon = new customIcon({iconUrl: 'Icons/tex_men_mapCursorYellowRhombus-sharedassets0.assets-249.png', iconSize: [64, 64], iconAnchor: [32, 32], popupAnchor: [0, -15]});
+	
+	var arrowUpIcon = new customIcon({iconUrl: 'Icons/tex_men_mapCursorSilverArrowUp-sharedassets37.assets-47.png'}),
+	arrowDownIcon = new customIcon({iconUrl: 'Icons/tex_men_mapCursorSilverArrowDown-sharedassets17.assets-236.png'}),
+	arrowLeftIcon = new customIcon({iconUrl: 'Icons/tex_men_mapCursorSilverArrowLeft-sharedassets27.assets-151.png'}),
+	arrowRightIcon = new customIcon({iconUrl: 'Icons/tex_men_mapCursorSilverArrowRight-sharedassets3.assets-196.png'});
+	
+	var customIcon2 = L.Icon.extend({
+		options: {
+			iconSize:     [40, 40], // size of the icon
+			iconAnchor:   [20, 20], // point of the icon which will correspond to marker's location
+			popupAnchor:  [0, -10] // point from which the popup should open relative to the iconAnchor
+		}
+	});
+	
+	var dungeonIcon = new customIcon2({iconUrl: 'Icons/dungeonIcon.png'});
+	
+	var cacheIcon = new customIcon2({iconUrl: 'Icons/cacheIcon.png'}),
+	chestIcon = new customIcon2({iconUrl: 'Icons/chestIcon.png'}),
+	ornateIcon = new customIcon2({iconUrl: 'Icons/ornateChestIcon.png'}),
+	legacyIcon = new customIcon2({iconUrl: 'Icons/legacyChestIcon.png', iconSize: [48, 48], iconAnchor: [24, 24]}),
+	trogIcon = new customIcon2({iconUrl: 'Icons/trogChestIcon.png'});
+	
+	
 	//--- DATA  BEGIN ---
 	
-	//Chersonese markers
+	//-- Chersonese markers
+	
 	var city1Markers = L.layerGroup();
 	CitiesLayer.addLayer(city1Markers);
-	L.marker(xy(143.71, 1471.84), {icon: townIcon}).bindPopup('Cierzo').addTo(city1Markers);
+	var cierzoMarker = L.marker(xy(143.71, 1471.84), {icon: townIcon, riseOnHover: true}).bindPopup('Cierzo').addTo(city1Markers);
 	
 	var fort1Markers = L.layerGroup();
 	FortsLayer.addLayer(fort1Markers);
 	L.marker(xy(551.18, 335.34), {icon: fortIcon}).bindPopup('Vendavel Fortress').addTo(fort1Markers);
-	L.marker(xy(1351, 1330), {icon: fortIcon}).bindPopup('Ghost Pass').addTo(fort1Markers);
+	L.marker(xy(1351, 1330), {icon: fortIcon}).bindPopup('Fort').addTo(fort1Markers);
 	
 	var camps1Markers = L.layerGroup();
 	BanditsLayer.addLayer(camps1Markers);
-	L.marker(xy(818.82, 1890.80), {icon: campIcon}).bindPopup('Bandit Camp').addTo(camps1Markers);
-	L.marker(xy(1282.75, 618.50), {icon: campIcon}).bindPopup('Bandit Camp').addTo(camps1Markers);
+	L.marker(xy(818.82, 1890.80), {icon: campIcon, riseOnHover: true}).bindPopup('Bandit Camp').addTo(camps1Markers);
+	L.marker(xy(1282.75, 618.50), {icon: campIcon, riseOnHover: true}).bindPopup('Bandit Camp').addTo(camps1Markers);
 	
 	var ruins1Markers = L.layerGroup();
 	RuinsLayer.addLayer(ruins1Markers);
@@ -130,24 +175,139 @@
 	
 	var pylons1Markers = L.layerGroup();
 	PylonsLayer.addLayer(pylons1Markers);
-	L.marker(xy(1778, 755), {icon: pylonIcon}).bindPopup('Vigil Pylon').addTo(pylons1Markers);
+	L.marker(xy(1806, 749), {icon: pylonIcon}).bindPopup('Vigil Pylon').addTo(pylons1Markers);
 	
-	var mountain1Markers = L.layerGroup();
-	MountainLayer.addLayer(mountain1Markers);
-	L.marker(xy(926, 880), {icon: mountIcon}).bindPopup('Conflux Mountain').addTo(mountain1Markers);
+	var other1Markers = L.layerGroup();
+	OtherLayer.addLayer(other1Markers);
+	L.marker(xy(926, 880), {icon: mountIcon}).bindPopup('Conflux Mountain').addTo(other1Markers);
 	
+	var zoneArrows1Markers = L.layerGroup();
+	ZoneArrowsLayer.addLayer(zoneArrows1Markers);
+	L.marker(xy(1936, 532), {icon: arrowRightIcon}).bindPopup('To Enmerkar Forest').addTo(zoneArrows1Markers);
+	L.marker(xy(1936, 1073.38), {icon: arrowRightIcon}).bindPopup('To Hallowed Marsh').addTo(zoneArrows1Markers);
+	
+	
+	var dungeons1 = L.layerGroup();
+	DungeonsLayer.addLayer(dungeons1);
+	L.marker(xy(327, 1801), {icon: dungeonIcon, riseOnHover: true}).bindPopup('Blister Burrow').addTo(dungeons1);
+	L.marker(xy(863.38, 1851.91), {icon: dungeonIcon, riseOnHover: true}).bindPopup('Montcalm Clan Fort').addTo(dungeons1);
+	L.marker(xy(791.25, 1867.47), {icon: dungeonIcon, riseOnHover: true}).bindPopup('Montcalm Clan Fort').addTo(dungeons1);
+	L.marker(xy(161.22, 946.82), {icon: dungeonIcon, riseOnHover: true}).bindPopup('Starfish Cave').addTo(dungeons1);
+	L.marker(xy(435.58, 1086.12), {icon: dungeonIcon, riseOnHover: true}).bindPopup('Hyena Burrow').addTo(dungeons1);
+	L.marker(xy(455.5, 593.25), {icon: dungeonIcon, riseOnHover: true}).bindPopup('Trog Infiltration').addTo(dungeons1);
+	L.marker(xy(611.5, 284), {icon: dungeonIcon, riseOnHover: true}).bindPopup('Vendavel Fortress').addTo(dungeons1);
+	L.marker(xy(731.86, 780.65), {icon: dungeonIcon, riseOnHover: true}).bindPopup("Holy Mission's Conflux Path").addTo(dungeons1);
+	L.marker(xy(786.3, 844.99), {icon: dungeonIcon, riseOnHover: true}).bindPopup("Heroic Kingdom's Conflux Path").addTo(dungeons1);
+	L.marker(xy(970.86, 723.37), {icon: dungeonIcon, riseOnHover: true}).bindPopup("Blue Chamber's Conflux Path").addTo(dungeons1);
+	L.marker(xy(1051, 260), {icon: dungeonIcon, riseOnHover: true}).bindPopup("Pirates' Hideout").addTo(dungeons1);
+	L.marker(xy(1364.75, 1853.75), {icon: dungeonIcon, riseOnHover: true}).bindPopup('Corrupted Tombs').addTo(dungeons1);
+	L.marker(xy(1057.83, 1893.63), {icon: dungeonIcon, riseOnHover: true}).bindPopup('Corrupted Tombs').addTo(dungeons1);
+	L.marker(xy(1340, 1292.5), {icon: dungeonIcon, riseOnHover: true}).bindPopup('Ghost Pass').addTo(dungeons1);
+	L.marker(xy(1778.37, 688.01), {icon: dungeonIcon, riseOnHover: true}).bindPopup('Vigil Tomb').addTo(dungeons1);
+	L.marker(xy(1611.5, 366), {icon: dungeonIcon, riseOnHover: true}).bindPopup('Voltaic Hatchery').addTo(dungeons1);
+	L.marker(xy(1772.01, 1926.87), {icon: dungeonIcon, riseOnHover: true}).bindPopup("Mansion's Cellar").addTo(dungeons1);
+	L.marker(xy(1283.75, 642.5), {icon: dungeonIcon, riseOnHover: true, zIndexOffset: 15}).bindPopup("Bandits' Prison").addTo(dungeons1);
 	
 	var safezones1 = L.layerGroup();
 	SafezonesLayer.addLayer(safezones1);
-	var circle = L.circle(xy(175.2, 145.0), {color: '#1a1aff', fillColor: '#1a75ff', fillOpacity: 0.35, radius: 30}).addTo(safezones1);
+	L.circle(xy(657, 433), {color: '#1a1aff', fillColor: '#1a75ff', fillOpacity: 0.30, radius: 20}).addTo(safezones1);
+	L.circle(xy(83.44, 1231.43), {color: '#1a1aff', fillColor: '#1a75ff', fillOpacity: 0.30, radius: 20}).addTo(safezones1);
+	L.circle(xy(253.85, 1472.2), {color: '#1a1aff', fillColor: '#1a75ff', fillOpacity: 0.30, radius: 20}).addTo(safezones1);
+	L.circle(xy(848.17, 1570.48), {color: '#1a1aff', fillColor: '#1a75ff', fillOpacity: 0.30, radius: 20}).addTo(safezones1);
+	L.circle(xy(713.47, 1267.84), {color: '#1a1aff', fillColor: '#1a75ff', fillOpacity: 0.30, radius: 20}).addTo(safezones1);
+	L.circle(xy(622.25, 1162.48), {color: '#1a1aff', fillColor: '#1a75ff', fillOpacity: 0.30, radius: 20}).addTo(safezones1);
+	L.circle(xy(569, 733.5), {color: '#1a1aff', fillColor: '#1a75ff', fillOpacity: 0.30, radius: 20}).addTo(safezones1);
+	L.circle(xy(930.91, 964.14), {color: '#1a1aff', fillColor: '#1a75ff', fillOpacity: 0.30, radius: 20}).addTo(safezones1);
+	L.circle(xy(1762.11, 1763.52), {color: '#1a1aff', fillColor: '#1a75ff', fillOpacity: 0.30, radius: 20}).addTo(safezones1);
+	L.circle(xy(1622.1, 868.33), {color: '#1a1aff', fillColor: '#1a75ff', fillOpacity: 0.30, radius: 20}).addTo(safezones1);
+	L.circle(xy(1481.39, 1022.12), {color: '#1a1aff', fillColor: '#1a75ff', fillOpacity: 0.30, radius: 20}).addTo(safezones1);
+	L.circle(xy(999.75, 172.25), {color: '#1a1aff', fillColor: '#1a75ff', fillOpacity: 0.30, radius: 20}).addTo(safezones1);
 	
+	var caches1 = L.layerGroup();
+	CachesLayer.addLayer(caches1);
+	L.marker(xy(298.5, 1581), {icon: cacheIcon, riseOnHover: true}).bindPopup('Supply Cache').addTo(caches1);
+	L.marker(xy(101.12, 1225.42), {icon: cacheIcon, riseOnHover: true}).bindPopup('Supply Cache').addTo(caches1);
+	L.marker(xy(867.27, 1562.35), {icon: cacheIcon, riseOnHover: true}).bindPopup('Supply Cache').addTo(caches1);
+	L.marker(xy(826.25, 1300.25), {icon: greenIcon, riseOnHover: true}).bindPopup("Adventurer's Corpse").addTo(caches1);
+	L.marker(xy(679.88, 1274.21), {icon: cacheIcon, riseOnHover: true}).bindPopup('Supply Cache').addTo(caches1);
+	L.marker(xy(585.13, 1197.49), {icon: cacheIcon, riseOnHover: true}).bindPopup('Supply Cache').addTo(caches1);
+	L.marker(xy(236.5, 759.25), {icon: cacheIcon, riseOnHover: true}).bindPopup('Supply Cache').addTo(caches1);
+	L.marker(xy(217.5, 731.25), {icon: greenIcon, riseOnHover: true}).bindPopup('Hollowed Trunk').addTo(caches1);
+	L.marker(xy(540.23, 729.03), {icon: cacheIcon, riseOnHover: true}).bindPopup('Supply Cache').addTo(caches1);
+	L.marker(xy(539.52, 709.94), {icon: greenIcon, riseOnHover: true}).bindPopup('Broken Tent').addTo(caches1);
+	L.marker(xy(663, 405.25), {icon: cacheIcon, riseOnHover: true}).bindPopup('Supply Cache').addTo(caches1);
+	L.marker(xy(902.75, 777.25), {icon: cacheIcon, riseOnHover: true}).bindPopup('Supply Cache').addTo(caches1);
+	L.marker(xy(1432.75, 1845.75), {icon: cacheIcon, riseOnHover: true}).bindPopup('Supply Cache').addTo(caches1);
+	L.marker(xy(1616.45, 1732.77), {icon: cacheIcon, riseOnHover: true}).bindPopup('Supply Cache').addTo(caches1);
+	L.marker(xy(1401.13, 1543.26), {icon: cacheIcon, riseOnHover: true}).bindPopup('Supply Cache').addTo(caches1);
+	L.marker(xy(1548.92, 468.46), {icon: cacheIcon, riseOnHover: true}).bindPopup('Supply Cache').addTo(caches1);
+	L.marker(xy(1667.71, 852.42), {icon: cacheIcon, riseOnHover: true}).bindPopup('Supply Cache').addTo(caches1);
+	L.marker(xy(1484.57, 1013.64), {icon: cacheIcon, riseOnHover: true}).bindPopup('Supply Cache').addTo(caches1);
+	L.marker(xy(1665, 1184), {icon: cacheIcon, riseOnHover: true}).bindPopup('Supply Cache').addTo(caches1);
+	L.marker(xy(1351.25, 1293), {icon: cacheIcon, riseOnHover: true}).bindPopup('Supply Cache').addTo(caches1);
+	L.marker(xy(1107.33, 1162.48), {icon: cacheIcon, riseOnHover: true}).bindPopup('Supply Cache').addTo(caches1);
+	L.marker(xy(1181.25, 1059), {icon: greenIcon, riseOnHover: true}).bindPopup("Worker's Corpse").addTo(caches1);
+	L.marker(xy(444.75, 1085.5), {icon: greenIcon, riseOnHover: true}).bindPopup("Worker's Corpse").addTo(caches1);
+	L.marker(xy(995.5, 177.5), {icon: cacheIcon, riseOnHover: true}).bindPopup('Supply Cache').addTo(caches1);
+	L.marker(xy(1049.75, 278.5), {icon: greenIcon, riseOnHover: true}).bindPopup("Adventurer's Corpse").addTo(caches1);
 	
-	//Enmerkar markers
+	var chests1 = L.layerGroup();
+	ChestsLayer.addLayer(chests1);
+	L.marker(xy(1479.27, 503.81), {icon: chestIcon, riseOnHover: true}).bindPopup("Argenson's Stash").addTo(chests1);
+	L.marker(xy(1779, 1939.5), {icon: chestIcon, riseOnHover: true}).bindPopup('Chest').addTo(chests1);
+	L.marker(xy(1779, 1939.5), {icon: chestIcon, riseOnHover: true}).bindPopup('Chest').addTo(chests1);
+	L.marker(xy(1274.5, 659.5), {icon: chestIcon, riseOnHover: true}).bindPopup('Chest').addTo(chests1);
+	L.marker(xy(1242, 580.5), {icon: chestIcon, riseOnHover: true}).bindPopup('Chest').addTo(chests1);
+	L.marker(xy(1259.25, 642.5), {icon: chestIcon, riseOnHover: true}).bindPopup('Chest').addTo(chests1);
+	L.marker(xy(508.06, 329.51), {icon: chestIcon, riseOnHover: true}).bindPopup('Chest').addTo(chests1);
+	L.marker(xy(1324.5, 1229.5), {icon: chestIcon, riseOnHover: true}).bindPopup('Chest').addTo(chests1);
+	L.marker(xy(1060.66, 1323.7), {icon: chestIcon, riseOnHover: true}).bindPopup('Chest').addTo(chests1);
+	L.marker(xy(317.14, 1809.49), {icon: trogIcon, riseOnHover: true}).bindPopup('Trog Chest').addTo(chests1);
+	
+	var ornateChests1 = L.layerGroup();
+	OrnateChestsLayer.addLayer(ornateChests1);
+	L.marker(xy(133.75, 1464), {icon: ornateIcon, riseOnHover: true, zIndexOffset: 5}).bindPopup('Ornate Chest').addTo(ornateChests1);
+	L.marker(xy(963.5, 733.25), {icon: ornateIcon, riseOnHover: true, zIndexOffset: 5}).bindPopup('Ornate Chest').addTo(ornateChests1);
+	L.marker(xy(841.46, 1898.58), {icon: ornateIcon, riseOnHover: true, zIndexOffset: 5}).bindPopup('Ornate Chest').addTo(ornateChests1);
+	L.marker(xy(1794, 743.5), {icon: ornateIcon, riseOnHover: true, zIndexOffset: 5}).bindPopup('Ornate Chest').addTo(ornateChests1);
+	L.marker(xy(1785.75, 1934.25), {icon: ornateIcon, riseOnHover: true, zIndexOffset: 5}).bindPopup('Ornate Chest').addTo(ornateChests1);
+	L.marker(xy(1070.21, 1909.54), {icon: ornateIcon, riseOnHover: true, zIndexOffset: 5}).bindPopup('Ornate Chest').addTo(ornateChests1);
+	L.marker(xy(1293.65, 657.96), {icon: ornateIcon, riseOnHover: true, zIndexOffset: 5}).bindPopup('Ornate Chest').addTo(ornateChests1);
+	L.marker(xy(476.94, 393.15), {icon: ornateIcon, riseOnHover: true, zIndexOffset: 5}).bindPopup('Ornate Chest').addTo(ornateChests1);
+	L.marker(xy(1346.25, 1318.25), {icon: ornateIcon, riseOnHover: true, zIndexOffset: 5}).bindPopup('Ornate Chest').addTo(ornateChests1);
+	L.marker(xy(1630.25, 360.5), {icon: ornateIcon, riseOnHover: true, zIndexOffset: 5}).bindPopup('Ornate Chest').addTo(ornateChests1);
+	
+	var legacyChests1 = L.layerGroup();
+	LegacyChestsLayer.addLayer(legacyChests1);
+	L.marker(xy(127.75, 1471.5), {icon: legacyIcon, riseOnHover: true, zIndexOffset: 25}).bindPopup('Legacy Chest').addTo(legacyChests1);
+	
+	var rooms1 = L.layerGroup();
+	RoomsLayer.addLayer(rooms1);
+	L.marker(xy(1077.75, 1308.5), {icon: yellowIcon, riseOnHover: true}).bindPopup("Immaculate's Cave").addTo(rooms1);
+	L.marker(xy(125.25, 1480.5), {icon: yellowIcon, riseOnHover: true, zIndexOffset: 15}).bindPopup('Cierzo Storage').addTo(rooms1);
+	L.marker(xy(33.94, 1135.61), {icon: yellowIcon, riseOnHover: true, zIndexOffset: 15}).bindPopup('Cierzo Storage (Exit)').addTo(rooms1);
+	L.marker(xy(1808.78, 1685.04), {icon: yellowIcon, riseOnHover: true, zIndexOffset: 15}).bindPopup("Hermit's Tower").addTo(rooms1);
+	
+	var traders1 = L.layerGroup();
+	TradersLayer.addLayer(traders1);
+	L.marker(xy(929.85, 972.27), {icon: purpleIcon, riseOnHover: true}).bindPopup('Soroborean Caravanner').addTo(traders1);
+	L.marker(xy(645.94, 414.01), {icon: purpleIcon, riseOnHover: true}).bindPopup('Soroborean Caravanner').addTo(traders1);
+	L.marker(xy(636.5, 1162), {icon: purpleIcon, riseOnHover: true}).bindPopup('Soroborean Caravanner').addTo(traders1);
+	L.marker(xy(1012.58, 325.98), {icon: purpleIcon, riseOnHover: true}).bindPopup('Soroborean Caravanner').addTo(traders1);
+	L.marker(xy(1525, 1444), {icon: purpleIcon, riseOnHover: true}).bindPopup('Soroborean Caravanner').addTo(traders1);
+	L.marker(xy(581.24, 750.59), {icon: purpleIcon, riseOnHover: true}).bindPopup('Soroborean Caravanner').addTo(traders1);
+	
+	//-- end
+	
+	//-- Enmerkar markers
+	
 	var city2Markers = L.layerGroup();
-	L.marker(xy(1265.72, 1436.84), {icon: townIcon}).bindPopup('Berg').addTo(city2Markers);
+	L.marker(xy(1265.72, 1436.84), {icon: townIcon, riseOnHover: true}).bindPopup('Berg').addTo(city2Markers);
 	
+	//-- end
 	
 	//--- DATA END ---
+	
 	
 	//Map object
 	var map = L.map('map', {
@@ -158,12 +318,12 @@
         zoomSnap: 0.5, //1
 		wheelDebounceTime: 10, //40
 		wheelPxPerZoomLevel: 128, //60
-		layers: [chersonese, CitiesLayer, FortsLayer, BanditsLayer, RuinsLayer, CabalTowersLayer, PylonsLayer, MountainLayer], //default display layers
+		layers: [chersonese, CitiesLayer, FortsLayer, BanditsLayer, RuinsLayer, CabalTowersLayer, PylonsLayer, OtherLayer, ZoneArrowsLayer], //default display layers
 	});
 	//map.fitBounds(bounds);
 	
 	//Add scale display
-	L.control.scale().addTo(map);
+	//L.control.scale().addTo(map);
 
 	//Center
 	map.setView(xy(1024, 1024), -1); //center, zoomLvl
@@ -171,24 +331,27 @@
 	//Control panel
 	L.control.layers(baseMaps, overlays,{collapsed:false}).addTo(map);
 	
-		/*"Cities": CitiesLayer,
-		"Bandit Camps": BanditsLayer,
-		"Fortresses": FortsLayer,
-		"Ancient Ruins": RuinsLayer,
-		"Cabal of Wind Tower": CabalTowersLayer,
-		"Vigil Pylon": PylonsLayer,
-		"Mountain": MountainLayer,
-		//Spoilers
-		"Dungeons": DungeonsLayer,
-		"Safezones": SafezonesLayer,
-		"Chests": ChestsLayer,
-		"Legacy Chests": LegacyChestsLayer,
-		"Misc. Rooms": RoomsLayer,
-		"Potential Trader Spots": TradersLayer,*/
 	
+	/*city1Markers
+	camps1Markers
+	fort1Markers
+	ruins1Markers
+	cabals1Markers
+	pylons1Markers
+	other1Markers
+	zoneArrows1Markers
+		
+	dungeons1
+	safezones1
+	caches1
+	chests1
+	ornateChests1
+	legacyChests1
+	rooms1
+	traders1*/
+		
 	
-	//Switch markers based on baseMap
-	chersonese.on("add",function()
+	function clearLayers()
 	{
 		CitiesLayer.clearLayers();
 		BanditsLayer.clearLayers();
@@ -196,9 +359,48 @@
 		RuinsLayer.clearLayers();
 		CabalTowersLayer.clearLayers();
 		PylonsLayer.clearLayers();
-		MountainLayer.clearLayers();
+		OtherLayer.clearLayers();
+		ZoneArrowsLayer.clearLayers();
 		
+		DungeonsLayer.clearLayers();
 		SafezonesLayer.clearLayers();
+		CachesLayer.clearLayers();
+		ChestsLayer.clearLayers();
+		OrnateChestsLayer.clearLayers();
+		LegacyChestsLayer.clearLayers();
+		RoomsLayer.clearLayers();
+		TradersLayer.clearLayers();
+	}
+	
+	//Switch markers based on baseMap
+	cierzo.on("add",function()
+	{
+		clearLayers();
+		
+		OtherLayer.addLayer(cierzoMarkers);
+	});
+	berg.on("add",function()
+	{
+		clearLayers();
+		
+		OtherLayer.addLayer(bergMarkers);
+	});
+	monsoon.on("add",function()
+	{
+		clearLayers();
+		
+		OtherLayer.addLayer(monsoonMarkers);
+	});
+	levant.on("add",function()
+	{
+		clearLayers();
+		
+		OtherLayer.addLayer(levantMarkers);
+	});
+	
+	chersonese.on("add",function()
+	{
+		clearLayers();
 		
 		CitiesLayer.addLayer(city1Markers);
 		BanditsLayer.addLayer(camps1Markers);
@@ -206,70 +408,104 @@
 		RuinsLayer.addLayer(ruins1Markers);
 		CabalTowersLayer.addLayer(cabals1Markers);
 		PylonsLayer.addLayer(pylons1Markers);
-		MountainLayer.addLayer(mountain1Markers);
+		OtherLayer.addLayer(other1Markers);
+		ZoneArrowsLayer.addLayer(zoneArrows1Markers);
 		
+		DungeonsLayer.addLayer(dungeons1);
 		SafezonesLayer.addLayer(safezones1);
+		CachesLayer.addLayer(caches1);
+		ChestsLayer.addLayer(chests1);
+		OrnateChestsLayer.addLayer(ornateChests1);
+		LegacyChestsLayer.addLayer(legacyChests1);
+		RoomsLayer.addLayer(rooms1);
+		TradersLayer.addLayer(traders1);
 	});
 
 	enmerkar.on("add",function()
 	{
-		CitiesLayer.clearLayers();
-		BanditsLayer.clearLayers();
-		FortsLayer.clearLayers();
-		RuinsLayer.clearLayers();
-		CabalTowersLayer.clearLayers();
-		PylonsLayer.clearLayers();
-		MountainLayer.clearLayers();
+		clearLayers();
 		
 		CitiesLayer.addLayer(city2Markers);
-		SafezonesLayer.clearLayers();
+		BanditsLayer.addLayer(camps2Markers);
+		FortsLayer.addLayer(fort2Markers);
+		RuinsLayer.addLayer(ruins2Markers);
+		CabalTowersLayer.addLayer(cabals2Markers);
+		PylonsLayer.addLayer(pylons2Markers);
+		OtherLayer.addLayer(other2Markers);
+		ZoneArrowsLayer.addLayer(zoneArrows2Markers);
+		
+		DungeonsLayer.addLayer(dungeons2);
+		SafezonesLayer.addLayer(safezones2);
+		CachesLayer.addLayer(caches2);
+		ChestsLayer.addLayer(chests2);
+		OrnateChestsLayer.addLayer(ornateChests2);
+		LegacyChestsLayer.addLayer(legacyChests2);
+		RoomsLayer.addLayer(rooms2);
+		TradersLayer.addLayer(traders2);
 	});
 	
 	hallowedMarsh.on("add",function()
 	{
-		CitiesLayer.clearLayers();
-		BanditsLayer.clearLayers();
-		FortsLayer.clearLayers();
-		RuinsLayer.clearLayers();
-		CabalTowersLayer.clearLayers();
-		PylonsLayer.clearLayers();
-		MountainLayer.clearLayers();
+		clearLayers();
 		
 		CitiesLayer.addLayer(city3Markers);
-		SafezonesLayer.clearLayers();
+		BanditsLayer.addLayer(camps3Markers);
+		FortsLayer.addLayer(fort3Markers);
+		RuinsLayer.addLayer(ruins3Markers);
+		CabalTowersLayer.addLayer(cabals3Markers);
+		PylonsLayer.addLayer(pylons3Markers);
+		OtherLayer.addLayer(other3Markers);
+		ZoneArrowsLayer.addLayer(zoneArrows3Markers);
+		
+		DungeonsLayer.addLayer(dungeons3);
+		SafezonesLayer.addLayer(safezones3);
+		CachesLayer.addLayer(caches3);
+		ChestsLayer.addLayer(chests3);
+		OrnateChestsLayer.addLayer(ornateChests3);
+		LegacyChestsLayer.addLayer(legacyChests3);
+		RoomsLayer.addLayer(rooms3);
+		TradersLayer.addLayer(traders3);
 	});
 	
 	abrassar.on("add",function()
 	{
-		CitiesLayer.clearLayers();
-		BanditsLayer.clearLayers();
-		FortsLayer.clearLayers();
-		RuinsLayer.clearLayers();
-		CabalTowersLayer.clearLayers();
-		PylonsLayer.clearLayers();
-		MountainLayer.clearLayers();
+		clearLayers();
 		
 		CitiesLayer.addLayer(city4Markers);
-		SafezonesLayer.clearLayers();
+		BanditsLayer.addLayer(camps4Markers);
+		FortsLayer.addLayer(fort4Markers);
+		RuinsLayer.addLayer(ruins4Markers);
+		CabalTowersLayer.addLayer(cabals4Markers);
+		PylonsLayer.addLayer(pylons4Markers);
+		OtherLayer.addLayer(other4Markers);
+		ZoneArrowsLayer.addLayer(zoneArrows4Markers);
+		
+		DungeonsLayer.addLayer(dungeons4);
+		SafezonesLayer.addLayer(safezones4);
+		CachesLayer.addLayer(caches4);
+		ChestsLayer.addLayer(chests4);
+		OrnateChestsLayer.addLayer(ornateChests4);
+		LegacyChestsLayer.addLayer(legacyChests4);
+		RoomsLayer.addLayer(rooms4);
+		TradersLayer.addLayer(traders4);
 	});
 
-	
-	
-	//var bounds = [xy(0, 0), xy(1190, 1195)];
-	//var image = L.imageOverlay('map_full.jpg', bounds).addTo(map);
-	//map.fitBounds(bounds);
-
-
+	function humanize(x){
+		return x.toFixed(2).replace(/\.?0*$/,'');
+	}
 
 	var popup = L.popup();
 	function onMapClick(e)
 	{
 		popup
 			.setLatLng(e.latlng)
-			.setContent("X,Y Coords: " + e.latlng.lng.toString() +", "+ e.latlng.lat.toString())
+			.setContent("x,y coords: " + humanize(e.latlng.lng) +", "+ humanize(e.latlng.lat))
 			.openOn(map);
 	}
-	map.on('click', onMapClick);
+	
+	//map.on('click', onMapClick);
+	map.on('contextmenu', onMapClick); //on right click
+	//map.on('mouseup', onMapClick);
 
 
 </script>
